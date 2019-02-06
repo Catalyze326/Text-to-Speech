@@ -9,6 +9,9 @@ def ask_google(string, i):
     tts = gTTS(text=string, lang='en')
     tts.save("audio/piece" + str(i) + ".mp3")
 
+if not os.path.exists("audio/"):
+    os.mkdir("audio/")
+
 
 f = open(sys.argv[1], "r")
 s = f.read()
