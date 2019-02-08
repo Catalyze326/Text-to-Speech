@@ -127,11 +127,12 @@ try:
             '''Extracts the text from the pdf, splits it into small enough
             pieces for it to go to google and then multithreads the sending of
             the files to google and saves the replys from google to mp3s'''
+            threadingCounter = 0
             for i in range(pdfReader.numPages):
                 # Better for debuging
                 s = str(pdfReader.getPage(i).extractText())
                 ph = make_phrases(s)
-                make_threads(ph, 0)
+                threadingCounter += make_threads(ph, threadingCounter)
                 # Fewer lines
                 # make_threads(make_phrases(str(pdfReader.getPage(i).extractText())), 0)
 
@@ -152,7 +153,6 @@ try:
         text = get_docx_text(sys.argv[1])
         ph = make_phrases()
         make_threads(ph, 0)
-
 
 
     # It will start reading the files aloud right when it makes the first one
