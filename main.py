@@ -111,15 +111,28 @@ try:
         try:
             # If it is a pdf that does not contain pure text add the true flag
             if sys.argv[2] == "--true":
-                # Convets the pdf into a string of images
-                images = convert_from_path(sys.argv[1])
-                threadingCounter = 0
-                ''' Turns the images into text and them into small enough sizes
-                to send to google and then multi threads the process of sending
-                the strings to google than saves those files to mp3s'''
-                for i in range(len(images)):
-                    ph = make_phrases(image_pdf(images[i], i))
-                    threadingCounter += make_threads(ph, threadingCounter)
+                try:
+                    if sys.argv[3] == "--true":
+                        # Convets the pdf into a string of images
+                        images = convert_from_path(sys.argv[1])
+                        threadingCounter = 0
+                        ''' Turns the images into text and them into small enough sizes
+                        to send to google and then multi threads the process of sending
+                        the strings to google than saves those files to mp3s'''
+                        for i in range(len(images)):
+                            f = open("output.txt", 'w')
+                            f.write(image_pdf(images[i], i))
+
+                except IndexError:
+                    # Convets the pdf into a string of images
+                    images = convert_from_path(sys.argv[1])
+                    threadingCounter = 0
+                    ''' Turns the images into text and them into small enough sizes
+                    to send to google and then multi threads the process of sending
+                    the strings to google than saves those files to mp3s'''
+                    for i in range(len(images)):
+                        ph = make_phrases(image_pdf(images[i], i))
+                        threadingCounter += make_threads(ph, threadingCounter)
 
         except IndexError:
             print("It is a normal pdf file")
@@ -154,21 +167,25 @@ try:
         ph = make_phrases()
         make_threads(ph, 0)
 
+    try:
+        if sys.argv[3] == "--true":
+            print("The file has been exported to a text file")
+    except IndexError:
+        # It will start reading the files aloud right when it makes the first one
+        # and then it will save the full export when its done.
+        i = 1
+        # Initalizeing the full track
+        full_track = AudioSegment.from_mp3("audio/piece0.mp3")
+        while os.path.isfile("audio/piece" + str(i) + ".mp3"):
+            # reads in a new track
+            new_track = AudioSegment.from_mp3("audio/piece" + str(i) + ".mp3")
+            print("adding track num " + str(i))
+            # adds the new tack to the full exported thing
+            full_track += new_track
+            i += 1
+        folder, filename = os.path.split(sys.argv[1])
+        full_track.export("audio/" + filename + ".mp3", format='mp3')
 
-    # It will start reading the files aloud right when it makes the first one
-    # and then it will save the full export when its done.
-    i = 1
-    # Initalizeing the full track
-    full_track = AudioSegment.from_mp3("audio/piece0.mp3")
-    while os.path.isfile("audio/piece" + str(i) + ".mp3"):
-        # reads in a new track
-        new_track = AudioSegment.from_mp3("audio/piece" + str(i) + ".mp3")
-        print("adding track num " + str(i))
-        # adds the new tack to the full exported thing
-        full_track += new_track
-        i += 1
-    folder, filename = os.path.split(sys.argv[1])
-    full_track.export("audio/" + filename + ".mp3", format='mp3')
 except KeyboardInterrupt:
     print("Goodbye World\n")
 
