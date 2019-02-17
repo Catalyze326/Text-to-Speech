@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from gtts import gTTS
 import os
 from pydub import AudioSegment
@@ -59,14 +60,14 @@ def convert_txt_to_docx():
 def delete_old_files():
     # Remove any leftover audio
     i = 0
-    while os.path.isfile("audio/piece" + str(i) + ".mp3"):
-        os.remove("audio/piece" + str(i) + ".mp3")
+    while os.path.isfile("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3"):
+        os.remove("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
         i += 1
 
     # Remove any leftover images
     i = 0
-    while os.path.isfile("images/test" + str(i) + ".jpg"):
-        os.remove("images/test" + str(i) + ".jpg")
+    while os.path.isfile("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg"):
+        os.remove("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg")
         i += 1
 
 
@@ -93,14 +94,14 @@ def get_docx_text(path):
 # Process the audio
 def ask_google(string, i):
     tts = gTTS(text=string, lang='en')
-    tts.save("audio/piece" + str(i) + ".mp3")
+    tts.save("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
 
 
 # Save the image and then turn it to text
 def image_pdf(image, i):
-    image.save("images/test" + str(i) + ".jpg")
-    image = Image.open("images/test" + str(i) + ".jpg", mode='r')
-    print(image_to_string(image))
+    image.save("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg")
+    image = Image.open("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg", mode='r')
+    # print(image_to_string(image))
     return image_to_string(image)
 
 
@@ -123,19 +124,16 @@ def make_threads(phrase_list, threadingCounter):
     length = len(phrase_list)
     i = 0
     cores = multiprocessing.cpu_count()
-
+    print (length)
     while i != length:
         threads = threading.activeCount()
-
-        if threads <= cores:
-            print (str(threadingCounter + 1) + "/" + str(length + threadingCounterDefault))
-            t1 = threading.Thread(target=ask_google, args=(phrase_list[i], threadingCounter,))
-            t1.start()
-            print("There are currently " + str(threads) + " threads running")
-            threadingCounter += 1
-            i += 1
-        else:
-            t1.join()
+        # print ("THe threads are " + threads + "\n" + "The cores are " + cores)
+        print (str(threadingCounter + 1) + "/" + str(length + threadingCounterDefault))
+        t1 = threading.Thread(target=ask_google, args=(phrase_list[i], threadingCounter,))
+        t1.start()
+        print("There are currently " + str(threads) + " threads running")
+        threadingCounter += 1
+        i += 1
     try:
         t1.join()
     except UnboundLocalError:
@@ -143,129 +141,84 @@ def make_threads(phrase_list, threadingCounter):
 
     return threadingCounter - threadingCounterDefault
 
-
-def main():
-    time1 = time.time()
+def main(filename):
+    print("Running the main loop")
     s = ""
+    f = open("/home/c/github/Text-to-Speech/output.txt", 'w')
     try:
-        if (sys.argv[1][-4:].lower() == ".pdf"):
-            try:
-                # If it is a pdf that does not contain pure text add the true flag
-                if sys.argv[2] == "--true":
-                    try:
-                        if sys.argv[3] == "--true":
-                            # Convets the pdf into a string of images
-                            images = convert_from_path(sys.argv[1])
-                            threadingCounter = 0
-                            ''' Turns the images into text and them into small enough sizes
-                            to send to google and then multi threads the process of sending
-                            the strings to google than saves those files to mp3s'''
-                            f = open("output.txt", 'w')
-                            for i in range(len(images)):
-                                f.write(image_pdf(images[i], i))
-
-                    except IndexError:
-                        # Convets the pdf into a string of images
-                        images = convert_from_path(sys.argv[1])
-                        threadingCounter = 0
-                        ''' Turns the images into text and them into small enough sizes
-                        to send to google and then multi threads the process of sending
-                        the strings to google than saves those files to mp3s'''
-                        for i in range(len(images)):
-                            ph = make_phrases(image_pdf(images[i], i))
-                            threadingCounter += make_threads(ph, threadingCounter)
-
-            except IndexError:
-                print("It is a normal pdf file")
-                pdfReader = PyPDF2.PdfFileReader(open(sys.argv[1], 'rb'))
+        if (filename[-4:] == ".pdf"):
+            pdfReader = PyPDF2.PdfFileReader(open(filename, 'rb'))
+            threadingCounter = 0
+            x = 0
+            i = 0
+            for i in range(5):
+                y = len(str(pdfReader.getPage(5 + i * 2).extractText()))
+                if x < y:
+                    x = y;
+            if x > 65:
                 '''Extracts the text from the pdf, splits it into small enough
                 pieces for it to go to google and then multithreads the sending of
                 the files to google and saves the replys from google to mp3s'''
-                threadingCounter = 0
+                print("This is a normal pdf.")
                 for i in range(pdfReader.numPages):
                     # Better for debuging
                     s = str(pdfReader.getPage(i).extractText())
                     ph = make_phrases(s)
                     threadingCounter += make_threads(ph, threadingCounter)
-                    # Fewer lines
-                    # make_threads(make_phrases(str(pdfReader.getPage(i).extractText())), 0)
+                    f.write(s)
+            else:
+                ''' Turns the images into text and them into small enough sizes
+                to send to google and then multi threads the process of sending
+                the strings to google than saves those files to mp3s'''
+                print("This is a scanned in pdf.")
+                images = convert_from_path(filename)
+                for i in range(len(images)):
+                    text = (image_pdf(images[i], i))
+                    f.write(text)
+                    print(text)
+                    ph = make_phrases(text)
+                    threadingCounter += make_threads(ph, threadingCounter)
 
-        elif sys.argv[1][-4:] == ".txt":
+
+        elif filename[-4:] == ".txt":
             # Better for debuging. Make into one line when done
             '''Converts the text into small enough pieces to send to google, multi
              threads the sending of those files to google and then saves those files
              google exports to mp3s'''
-            f = open(sys.argv[1], "r")
+            f = open(filename, "r")
             ph = make_phrases(f.read())
             make_threads(ph, 0)
+            # o = open("output.txt", 'w')
+            o.write(f.read())
 
-        elif sys.argv[1][-5:] == ".docx":
+        elif filename[-5:] == ".docx":
     #       Better for debuging when done put it in one function call
             '''Extracts the text out of the docx file and then splits that into
             phrases small enough to send to google and then multithreads that
             process and then saves the exported files as mp3s'''
-            text = get_docx_text(sys.argv[1])
-            ph = make_phrases()
+            text = get_docx_text(filename)
+            ph = make_phrases(text)
             make_threads(ph, 0)
-        elif sys.argv[1][-4:] == ".jpg" or sys.argv[1][-4:] == ".png":
-            print(image_to_string(sys.argv[1]))
-            f = open("output.txt", 'w')
-            f.write(image_to_string(sys.argv[1]))
-            convert_txt_to_docx()
-
-        try:
-            if sys.argv[3] == "--true":
-                print("The file has been exported to a text file")
-                convert_txt_to_docx()
-        except IndexError:
-            generate_single_track()
+            f.write(text)
+        i = 1
+        # Initalizeing the full track
+        full_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/audio/piece0.mp3")
+        while os.path.isfile("audio/piece" + str(i) + ".mp3"):
+            # reads in a new track
+            new_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
+            print("adding track num " + str(i))
+            # adds the new tack to the full exported thing
+            full_track += new_track
+            i += 1
+        folder, filename = os.path.split(filename)
+        full_track.export("/home/c/github/Text-to-Speech/audio/" + filename + ".mp3", format='mp3')
+        # f = open("/home/c/github/Text-to-Speech/output1.txt", 'r')
+        # o = open("/home/c/github/Text-to-Speech/output.txt", 'w')
+        o.write(f.read())
+        delete_old_files()
 
     except KeyboardInterrupt:
         print("Goodbye World\n")
+        delete_old_files()
 
-    # It causes errors when the leftover files are still there when it runs again
-    delete_old_files()
-
-    time2 = time.time()
-    print ("Time taken is " + str(time2 - time1) + " seconds.")
-
-# app = Flask(__name__)
-#
-# if __name__ == "__main__":
-# 	app.run()
-#
-#
-#
-# # @app.route('/hello/')
-# # @app.route('/hello/<name>')
-# # def output():
-# # 	return "Hello World!"
-#
-# @app.route("/output")
-# def output():
-# 	return "Hello World!"
-
-# @app.route('/hello/')
-# @app.route('/hello/<name>')
-# def hello(name=None):
-#     with app.app_context():
-#         render_template('hello.html', name=name)
-
-# @app.route('/hello/')
-# def contact():
-#     print("lol")
-#     if request.method == 'POST':
-#         if request.form['home'] == 'Home':
-#             print("lol")
-#         elif request.form['login'] == 'Login':
-#             pass # do something else
-#         else:
-#             pass # unknown
-#     elif request.method == 'GET':
-#         return render_template('hello.html', form=form)
-
-
-print("hi")
-# output()
-# t1 = threading.Thread(target=, args=(phrase_list[i], threadingCounter,))
-# t2 = threading.Thread(target=contact, args=())
+main(sys.argv[1])
