@@ -1,0 +1,40 @@
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css"  href="/media/documents/main.css">
+</head>
+
+{% block content %}
+{% endblock%}
+  <body>
+
+{%block header%}
+{%endblock%}
+
+<div class="header">
+    <span style="color: orange;font-size:30px;cursor:pointer" onclick="openNav()">&#9776;Audio FIles</span>
+    <div class="header-right">
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'read' %}">Reader</a>
+      <a href="{% url 'upload' %}">Upload</a>
+      <a href="http://localhost:8000/admin">Admin</a>
+
+    </div>
+</div>
+
+<div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    {% for file in download_list %}
+    <a href="/media/processed-audio/{{file}}" download="{{file}}">{{file}}</a>
+    {% endfor %}
+</div>
+
+<script>
+    function openNav() {
+        document.getElementById("mySidenav").style.width = "300px";
+    }
+    function closeNav() {
+        document.getElementById("mySidenav").style.width = "0";
+    }
+</script>
+  </body>

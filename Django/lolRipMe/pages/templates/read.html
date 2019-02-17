@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include 'base.html' %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Reader</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css"  href="/media/documents/main.css">
+</head>
+
+<style>
+body {
+  background-color: #606060;
+  margin: 0px;
+  font-family: "Lato", sans-serif;
+}
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      setInterval(myMethod, 3000);
+      function myMethod() {
+        //this will repeat every 5 seconds
+        //you can reset counter here
+        $.ajax({
+          url: "http://localhost:8000/text",
+          dataType: "text",
+          success: function(data) {
+            $(".text").html(data);
+          }
+        });
+      }
+      $("#lesen").click(function() {
+        $.ajax({
+          url: "http://localhost:8000/func1/",
+          dataType: "text",
+          success: function(data) {
+            $("#nothing").html(data);
+          }
+        });
+      });
+    });
+    </script>
+
+<script>
+    function openNav() {
+        document.getElementById("mySidenav").style.width = "300px";
+    }
+    function closeNav() {
+        document.getElementById("mySidenav").style.width = "0";
+    }
+    </script>
+
+
+    <body>
+
+<br>
+
+<div class="col-md-1">
+</div>
+
+<div id="text-box" class="col-md-10">
+  <div id="text" class="text">
+  <h3 style="color:#606060; Line-Height:2">
+  {% for phrase in file_content %}
+  {{phrase}}
+  {%endfor%}
+</h3>
+</div>
+</div>
+
+<div class="col-md-1">
+</div>
+
+<div class="col-md-12" style="text-align: center">
+  <br>
+  <audio src="" controls></audio>
+</div>
+</body>

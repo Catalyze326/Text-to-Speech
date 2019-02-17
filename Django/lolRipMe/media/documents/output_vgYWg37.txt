@@ -1,0 +1,11 @@
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
+Take the path of a docx file as argument, return the text in unicode.
