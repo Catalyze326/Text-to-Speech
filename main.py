@@ -10,6 +10,8 @@ from pdf2image import convert_from_path
 from PIL import Image
 from pytesseract import image_to_string
 import multiprocessing
+from docx import Document
+import re
 try:
     from xml.etree.cElementTree import XML
 except ImportError:
@@ -19,6 +21,38 @@ import zipfile
 WORD_NAMESPACE = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 PARA = WORD_NAMESPACE + 'p'
 TEXT = WORD_NAMESPACE + 't'
+
+
+def generate_single_track():
+    if os.path.isfile("audio/piece0.mp3"):
+        # It will start reading the file aloud right when it makes the first one
+        # and then it will save the full export when its done.
+        i = 1
+        # Initalizeing the full track
+        full_track = AudioSegment.from_mp3("audio/piece0.mp3")
+        while os.path.isfile("audio/piece" + str(i) + ".mp3"):
+            # reads in a new track
+            new_track = AudioSegment.from_mp3("audio/piece" + str(i) + ".mp3")
+            print("adding track num " + str(i))
+            # adds the new tack to the full exported thing
+            full_track += new_track
+            i += 1
+        folder, filename = os.path.split(sys.argv[1])
+        full_track.export("audio/" + filename + ".mp3", format='mp3')
+
+
+def convert_txt_to_docx():
+    path = '~/github/Text-to-Speech/output.txt'
+    direct = os.listdir(path)
+
+    for i in direct:
+        document = Document()
+        document.add_heading(i, 0)
+        myfile = open("output.txt").read()
+        myfile = re.sub(r'[^\x00-\x7F]+|\x0c',' ', myfile) # remove all non-XML-compatible characters
+        # p = document.add_paragraph(myfile)
+        document.save('output.docx')
+
 
 def delete_old_files():
     # Remove any leftover audio
@@ -53,10 +87,12 @@ def get_docx_text(path):
 
     return '\n\n'.join(paragraphs)
 
+
 # Process the audio
 def ask_google(string, i):
     tts = gTTS(text=string, lang='en')
     tts.save("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
+
 
 # Save the image and then turn it to text
 def image_pdf(image, i):
@@ -65,6 +101,7 @@ def image_pdf(image, i):
     # print(image_to_string(image))
     return image_to_string(image)
 
+
 # Turn the large body of text into small pieces
 def make_phrases(s):
     word_list = s.split(" ")
@@ -72,10 +109,11 @@ def make_phrases(s):
     phrase_list = []
     for i in range(len(word_list)):
         phrase += word_list[i] + " "
-        if len(phrase) >= 120:
+        if len(phrase) >= 110:
             phrase_list.append(phrase)
             phrase = ""
     return phrase_list
+
 
 # Multithread it
 def make_threads(phrase_list, threadingCounter):
