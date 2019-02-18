@@ -241,7 +241,7 @@ def home(request):
     print(files)
     uploaded = get_latest_file("/home/c/github/Text-to-Speech/Django/lolRipMe/media/documents")
     context = {'file_content': file_content, 'download_list': files, 'latest_file': uploaded}
-    return render(request, "index.html", context)
+    return render(request, "home.html", context)
 
 
 def about(request):
@@ -277,7 +277,7 @@ def read(request):
     files = list_files('/home/c/github/Text-to-Speech/Django/lolRipMe/media/processed-audio')
     for i in range(len(files)):
         tmp, files[i] = os.path.split(files[i])
-    print(files)
+    # print(files)
     uploaded = get_latest_file("/home/c/github/Text-to-Speech/Django/lolRipMe/media/documents")
     context = {'file_content': file_content, 'download_list': files, 'latest_file': uploaded}
     return render(request, "read.html", context)
@@ -302,9 +302,15 @@ def text(request):
     file_content = make_phrases(f.read())
     f.close()
     context = {'file_content': file_content}
-
     return render(request, "text.html", context)
 
+def sidenav(request):
+    files = list_files('/home/c/github/Text-to-Speech/Django/lolRipMe/media/processed-audio')
+    for i in range(len(files)):
+        tmp, files[i] = os.path.split(files[i])
+    # print(files)
+    context = {'download_list':files }
+    return render(request, "sidenav.html", context)
 
 def model_form_upload(request):
     f = open(('/home/c/github/Text-to-Speech/output.txt'), 'r')
@@ -320,13 +326,13 @@ def model_form_upload(request):
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-        file_list_b = list_files("/home/c/github/Text-to-Speech/Django/lolRipMe/media/documents")
-        p1 = threading.Thread(target=main, args=(x for x in file_list_b if x not in file_list_a),)
-        p1.start()
+            file_list_b = list_files("/home/c/github/Text-to-Speech/Django/lolRipMe/media/documents")
+            p1 = threading.Thread(target=main, args=(x for x in file_list_b if x not in file_list_a),)
+            p1.start()
         return redirect('read')
     else:
         form = DocumentForm()
-        context = {'file_content': file_content, 'download_list': files, 'latest_file': uploaded, 'form': form}
+        context = {'file_content': file_content, 'download_list': files, 'form': form}
         return render(request, 'model_form_upload.html', context)
 
 

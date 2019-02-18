@@ -14,17 +14,17 @@ while (True == True):
     # listen for 1 second and create the ambient noise energy level
     r.adjust_for_ambient_noise(source, duration=1)
     print("Say something!")
-    audio = r.listen(source,phrase_time_limit=1)
+    audio = r.listen(source,phrase_time_limit=5)
 
 # recognize speech using Sphinx/Google
   try:
-    # response = r.recognize_sphinx(audio)
-    response = r.recognize_google(audio)
+    response = r.recognize_sphinx(audio)
+    # response = r.recognize_google(audio)
     print("I think you said '" + response + "'")
-    tts = gTTS(text="I think you said " + str(response), lang='en')
-    tts.save("response.mp3")
-    mixer.music.load('response.mp3')
-    mixer.music.play()
+    # tts = gTTS(text="I think you said " + str(response), lang='en')
+    # tts.save("response.mp3")
+    # mixer.music.load('response.mp3')
+    # mixer.music.play()
 
 
   except sr.UnknownValueError:

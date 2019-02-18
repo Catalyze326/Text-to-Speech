@@ -24,7 +24,7 @@ body {
 
   <script type="text/javascript">
     $(document).ready(function() {
-      setInterval(myMethod, 3000);
+      setInterval(myMethod, 8000);
       function myMethod() {
         //this will repeat every 5 seconds
         //you can reset counter here
@@ -33,6 +33,13 @@ body {
           dataType: "text",
           success: function(data) {
             $(".text").html(data);
+          }
+        });
+        $.ajax({
+          url: "http://localhost:8000/sidenav",
+          dataType: "sidenav",
+          success: function(data) {
+            $(".sidenav").html(data);
           }
         });
       }
@@ -48,9 +55,11 @@ body {
     });
     </script>
 
+
 <script>
     function openNav() {
         document.getElementById("mySidenav").style.width = "300px";
+
     }
     function closeNav() {
         document.getElementById("mySidenav").style.width = "0";
@@ -58,10 +67,9 @@ body {
     </script>
 
 
-    <body>
 
+<body>
 <br>
-
 <div class="col-md-1">
 </div>
 

@@ -11,6 +11,7 @@ urlpatterns = [
     path('read/', views.read, name='read'),
     path('text/', views.text, name='text'),
     path('upload/', views.model_form_upload, name='upload'),
+    path('sidenav/', views.sidenav, name='sidenav'),
    ]
 
 
