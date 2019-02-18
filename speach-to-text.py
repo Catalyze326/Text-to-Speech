@@ -2,15 +2,16 @@ import speech_recognition as sr
 from gtts import gTTS
 #quiet the endless 'insecurerequest' warning
 import urllib3
-# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 from pygame import mixer
 mixer.init()
 
-while (True == True):
+while (True):
 # obtain audio from the microphone
   r = sr.Recognizer()
   with sr.Microphone() as source:
-    print("Please wait. Calibrating microphone...")
+    #print("Please wait. Calibrating microphone...")
     # listen for 1 second and create the ambient noise energy level
     r.adjust_for_ambient_noise(source, duration=1)
     print("Say something!")

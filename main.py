@@ -17,6 +17,9 @@ try:
 except ImportError:
     from xml.etree.ElementTree import XML
 import zipfile
+from flask import Flask
+from flask import render_template
+
 
 WORD_NAMESPACE = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 PARA = WORD_NAMESPACE + 'p'
