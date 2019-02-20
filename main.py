@@ -1,73 +1,39 @@
-from django.shortcuts import render
+import sys
+import pytesseract
+import cv2
+import concurrent.futures
+import glob
 from gtts import gTTS
 import os
 from pydub import AudioSegment
 import threading
-import sys
 import PyPDF2
 import time
 from pdf2image import convert_from_path
-from PIL import Image
-from pytesseract import image_to_string
 import multiprocessing
-from docx import Document
-import re
 try:
     from xml.etree.cElementTree import XML
 except ImportError:
     from xml.etree.ElementTree import XML
 import zipfile
-from flask import Flask
-from flask import render_template
-
 
 WORD_NAMESPACE = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 PARA = WORD_NAMESPACE + 'p'
 TEXT = WORD_NAMESPACE + 't'
 
 
-def generate_single_track():
-    if os.path.isfile("audio/piece0.mp3"):
-        # It will start reading the file aloud right when it makes the first one
-        # and then it will save the full export when its done.
-        i = 1
-        # Initalizeing the full track
-        full_track = AudioSegment.from_mp3("audio/piece0.mp3")
-        while os.path.isfile("audio/piece" + str(i) + ".mp3"):
-            # reads in a new track
-            new_track = AudioSegment.from_mp3("audio/piece" + str(i) + ".mp3")
-            print("adding track num " + str(i))
-            # adds the new tack to the full exported thing
-            full_track += new_track
-            i += 1
-        folder, filename = os.path.split(sys.argv[1])
-        full_track.export("audio/" + filename + ".mp3", format='mp3')
-
-
-def convert_txt_to_docx():
-    path = '~/github/Text-to-Speech/output.txt'
-    direct = os.listdir(path)
-
-    for i in direct:
-        document = Document()
-        document.add_heading(i, 0)
-        myfile = open("output.txt").read()
-        myfile = re.sub(r'[^\x00-\x7F]+|\x0c',' ', myfile) # remove all non-XML-compatible characters
-        # p = document.add_paragraph(myfile)
-        document.save('output.docx')
-
-
-def delete_old_files():
+def delete_old_files(filename_no_ext):
     # Remove any leftover audio
     i = 0
-    while os.path.isfile("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3"):
-        os.remove("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
+    while os.path.isfile("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/" + str(i) + ".mp3"):
+        os.rename("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/" + str(i) + ".mp3",
+         "/home/c/github/Text-to-Speech/Django/lolRipMe/media/old-unprocessed-audio/" + filename_no_ext + str(i) + ".mp3")
         i += 1
 
     # Remove any leftover images
     i = 0
-    while os.path.isfile("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg"):
-        os.remove("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg")
+    while os.path.isfile("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-images/" + str(i) + ".png"):
+        os.remove("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-images/" + str(i) + ".png")
         i += 1
 
 
@@ -79,7 +45,6 @@ def get_docx_text(path):
     xml_content = document.read('word/document.xml')
     document.close()
     tree = XML(xml_content)
-
     paragraphs = []
     for paragraph in tree.getiterator(PARA):
         texts = [node.text
@@ -94,15 +59,31 @@ def get_docx_text(path):
 # Process the audio
 def ask_google(string, i):
     tts = gTTS(text=string, lang='en')
-    tts.save("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
+    tts.save("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/piece" + str(i) + ".mp3")
 
 
-# Save the image and then turn it to text
-def image_pdf(image, i):
-    image.save("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg")
-    image = Image.open("/home/c/github/Text-to-Speech/images/test" + str(i) + ".jpg", mode='r')
-    # print(image_to_string(image))
-    return image_to_string(image)
+def image_to_text():
+    out_dir = "/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-text/"
+    os.environ['OMP_THREAD_LIMIT'] = '1'
+    threads = multiprocessing.cpu_count()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
+        image_list = list_files("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-images")
+        print(image_list)
+        for img_path,out_file in zip(image_list,executor.map(ocr,image_list)):
+            print("I did a thing")
+
+
+def ocr(img_path):
+    # print(img_path)
+    out_dir = "/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-text/"
+    img = cv2.imread(img_path)
+    text = pytesseract.image_to_string(img,lang='eng',config='--psm 6')
+    print(text)
+    temp, filename = os.path.split(img_path)
+    f = open(out_dir + filename[:-4] + ".txt", 'w+')
+    f.write(text)
+    f.flush()
+    return
 
 
 # Turn the large body of text into small pieces
@@ -112,7 +93,7 @@ def make_phrases(s):
     phrase_list = []
     for i in range(len(word_list)):
         phrase += word_list[i] + " "
-        if len(phrase) >= 110:
+        if len(phrase) >= 120:
             phrase_list.append(phrase)
             phrase = ""
     return phrase_list
@@ -120,105 +101,192 @@ def make_phrases(s):
 
 # Multithread it
 def make_threads(phrase_list, threadingCounter):
+    time_start = time.time()
+    i = 0
     threadingCounterDefault = threadingCounter
     length = len(phrase_list)
-    i = 0
     cores = multiprocessing.cpu_count()
-    print (length)
+    print ("The ammount of threads we will be making is" + str(length))
     while i != length:
         threads = threading.activeCount()
-        # print ("THe threads are " + threads + "\n" + "The cores are " + cores)
         print (str(threadingCounter + 1) + "/" + str(length + threadingCounterDefault))
         t1 = threading.Thread(target=ask_google, args=(phrase_list[i], threadingCounter,))
         t1.start()
-        print("There are currently " + str(threads) + " threads running")
+        print("There are currently " + str(threads)  + " threads running")
         threadingCounter += 1
         i += 1
     try:
         t1.join()
     except UnboundLocalError:
         print("Tried to allow threads to close when none existed")
-
+    print(time.time() - time_start)
     return threadingCounter - threadingCounterDefault
 
-def main(filename):
-    print("Running the main loop")
-    s = ""
-    f = open("/home/c/github/Text-to-Speech/output.txt", 'w')
-    try:
-        if (filename[-4:] == ".pdf"):
-            pdfReader = PyPDF2.PdfFileReader(open(filename, 'rb'))
-            threadingCounter = 0
-            x = 0
-            i = 0
-            for i in range(5):
-                y = len(str(pdfReader.getPage(5 + i * 2).extractText()))
-                if x < y:
-                    x = y;
-            if x > 65:
-                '''Extracts the text from the pdf, splits it into small enough
-                pieces for it to go to google and then multithreads the sending of
-                the files to google and saves the replys from google to mp3s'''
-                print("This is a normal pdf.")
-                for i in range(pdfReader.numPages):
-                    # Better for debuging
-                    s = str(pdfReader.getPage(i).extractText())
-                    ph = make_phrases(s)
-                    threadingCounter += make_threads(ph, threadingCounter)
-                    f.write(s)
-            else:
-                ''' Turns the images into text and them into small enough sizes
-                to send to google and then multi threads the process of sending
-                the strings to google than saves those files to mp3s'''
-                print("This is a scanned in pdf.")
-                images = convert_from_path(filename)
-                for i in range(len(images)):
-                    text = (image_pdf(images[i], i))
-                    f.write(text)
-                    print(text)
-                    ph = make_phrases(text)
-                    threadingCounter += make_threads(ph, threadingCounter)
+
+def make_full_track(filename_no_ext):
+    i = 0
+    # Initalizeing the full track
+    full_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/piece0.mp3")
+    while os.path.isfile("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/piece" + str(i) + ".mp3"):
+        # reads in a new track
+        new_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/Django/lolRipMe/media/unprocessed-audio/piece" + str(i) + ".mp3")
+        print("adding track num " + str(i))
+        # adds the new tack to the full exported thing
+        full_track += new_track
+        i += 1
+    full_track.export("/home/c/github/Text-to-Speech/Django/lolRipMe/media/processed-audio/" + filename_no_ext + ".mp3", format='mp3')
 
 
-        elif filename[-4:] == ".txt":
-            # Better for debuging. Make into one line when done
-            '''Converts the text into small enough pieces to send to google, multi
-             threads the sending of those files to google and then saves those files
-             google exports to mp3s'''
-            f = open(filename, "r")
-            ph = make_phrases(f.read())
-            make_threads(ph, 0)
-            # o = open("output.txt", 'w')
-            o.write(f.read())
+def decide_pdfs(path_and_filename, filename_no_ext):
+    # Turn the path into its smaller parts to use them individually
+    path, filename = os.path.split(path_and_filename)
+    filename_no_ext, ext = os.path.splitext(filename)
+    # Initalize pdf reader
+    pdfReader = PyPDF2.PdfFileReader(open(path_and_filename, 'rb'))
+    # Determin whether a pdf is made up of text or it is scanned in
+    x = 0
+    # TODO put try catch in here
+    for i in range(5):
+        y = len(str(pdfReader.getPage(2 + i * 2).extractText()))
+        if x < y:
+            x = y
+    if x > 120:
+        print("This is a normal pdf.")
+        normal_pdf(path_and_filename, filename_no_ext)
+    else:
+        print("This is a scanned in pdf")
+        scanned_pdf(path_and_filename, filename_no_ext)
 
-        elif filename[-5:] == ".docx":
-    #       Better for debuging when done put it in one function call
-            '''Extracts the text out of the docx file and then splits that into
-            phrases small enough to send to google and then multithreads that
-            process and then saves the exported files as mp3s'''
-            text = get_docx_text(filename)
-            ph = make_phrases(text)
-            make_threads(ph, 0)
-            f.write(text)
-        i = 1
-        # Initalizeing the full track
-        full_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/audio/piece0.mp3")
-        while os.path.isfile("audio/piece" + str(i) + ".mp3"):
-            # reads in a new track
-            new_track = AudioSegment.from_mp3("/home/c/github/Text-to-Speech/audio/piece" + str(i) + ".mp3")
-            print("adding track num " + str(i))
-            # adds the new tack to the full exported thing
-            full_track += new_track
-            i += 1
-        folder, filename = os.path.split(filename)
-        full_track.export("/home/c/github/Text-to-Speech/audio/" + filename + ".mp3", format='mp3')
-        # f = open("/home/c/github/Text-to-Speech/output1.txt", 'r')
-        # o = open("/home/c/github/Text-to-Speech/output.txt", 'w')
-        o.write(f.read())
-        delete_old_files()
 
-    except KeyboardInterrupt:
-        print("Goodbye World\n")
-        delete_old_files()
+def normal_pdf(path_and_filename, filename_no_ext):
+    threadingCounter = 0
+    pdfReader = PyPDF2.PdfFileReader(open(path_and_filename, 'rb'))
+    s = ''
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+    for i in range(pdfReader.numPages):
+        # Extract text from pdf paeg
+        s = str(pdfReader.getPage(i).extractText())
+        # Wirte to output.txt
+        f.write(s)
+        f.flush()
+        # Turn into phrases small enough to send to api
+        ph = make_phrases(s)
+        # multithread and send to api
+        threadingCounter += make_threads(ph, threadingCounter)
 
-main(sys.argv[1])
+
+def scanned_pdf(path_and_filename, filename_no_ext):
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+    # Turn pdf into list of images
+    images = convert_from_path(path_and_filename)
+    # print(images)
+    for i in range(len(images)):
+        images[i].save("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-images/" + str(i) + ".png")
+    image_to_text()
+    i = 0
+    s = ''
+    threadingCounter = 0
+    while os.path.isfile("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-text/" + str(i) + ".txt"):
+        f1 = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/ocr-text/" + str(i) + ".txt", 'r')
+        s += f1.read().replace('\n',' ').replace('\t',' ')
+        i += 1
+
+    print(s)
+    ph = make_phrases(s)
+    threadingCounter += make_threads(ph, threadingCounter)
+
+
+
+def image(path_and_filename, filename_no_ext):
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+    text = pytesseract.image_to_string(path_and_filename)
+    # Write to output.txt
+    f.write(text)
+    f.flush()
+    # Make page into small enough phrases to send to api
+    make_threads(make_phrases(text), 0)
+
+
+def txt(path_and_filename, filename_no_ext):
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+    # Better for debuging. Make into one line when done
+    fr = open(path_and_filename, "r")
+    # Write to output.txt
+    f.write(fr.read())
+    f.flush()
+    # Make into smaller phrases to send to api for processing
+    ph = make_phrases(fr.read())
+    # Multi process the sending of the threads
+    make_threads(ph, 0)
+
+
+def docx(path_and_filename, filename_no_ext):
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+#   Better for debuging when done put it in one function call
+    text = get_docx_text(path_and_filename, filename_no_ext)
+    # Write to output.txt
+    f.write(text)
+    f.flush()
+    ph = make_phrases(text)
+    make_threads(ph, 0)
+
+
+# List files in a directory going recursively.
+def list_files(loc):
+    filelist = []
+    dirlist = list_dirs(loc)
+    for path, dirs, files in os.walk(loc):
+        for f in files:
+            filelist.append(path + "/" + f)
+    for dir in dirlist:
+        for path, dirs, files in os.walk(dir):
+            for f in files:
+                filelist.append(path + "/" + f)
+    # for file in filelist:
+    #     print("We found " + file)
+    return filelist
+
+
+# returns a list of the directories in a folder
+def list_dirs(loc):
+    dirlist = []
+    for path, dirs, files in os.walk(loc):
+        for d in dirs:
+            lol = (path + "/" + d)
+            dirlist.append(lol)
+    return dirlist
+
+
+def get_latest_file(path):
+    list_of_files = glob.glob(path + '/*')
+    latest_file = max(list_of_files, key=os.path.getctime)
+    return latest_file
+
+
+def main(path_and_filename=sys.argv[1]):
+    # Turn the path into its smaller parts to use them individually
+    path, filename = os.path.split(path_and_filename)
+    filename_no_ext, ext = os.path.splitext(filename)
+    # Erase Output.txt
+    f = open("/home/c/github/Text-to-Speech/Django/lolRipMe/media/text-files/" + filename_no_ext + ".txt", 'w')
+    f.close()
+    # Image types
+    image_types = {'.jpg', '.png', '.gif', '.jpeg', '.tif', '.raw'}
+
+    # Get start time so that you can check how long it took
+    time1 = time.time()
+    if (ext.lower() == ".pdf"):
+        decide_pdfs(path_and_filename, filename_no_ext)
+    elif ext.lower() == ".txt":
+        txt(path_and_filename, filename_no_ext)
+    elif ext.lower() == ".docx":
+        docx(path_and_filename, filename_no_ext)
+    elif ext.lower() in image_types:
+        image(path_and_filename, filename_no_ext)
+
+    make_full_track(filename_no_ext)
+    print("Deleting and moving extra files")
+    delete_old_files(filename_no_ext)
+    print("The time taken was " + str(time.time() - time1) + "\nDone!")
+
+main()

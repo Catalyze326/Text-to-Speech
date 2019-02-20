@@ -7,6 +7,34 @@ body {
     font-family: 'Poppins', sans-serif;
     background: #fafafa;
 }
+.jumbotron {
+    text-align: center;
+    padding-top: 10rem;
+    padding-bottom: 10rem;
+    text-shadow: 2px 2px #000;
+}
+.lead span {
+    color: orange;
+    font-weight: bold;
+}
+.bg-cover {
+    background-image: url("/home/c/github/Text-to-Speech/Django/lolRipMe/media/web-images/Glass-Dom.jpeg");
+    background-size: cover;
+    color: white;
+    background-position: center;
+    position: relative;
+    z-index: -2;
+}
+.overlay {
+    background-color: #000;
+    opacity: 0.31;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: -1;
+}
 
 p {
     font-family: 'Poppins', sans-serif;

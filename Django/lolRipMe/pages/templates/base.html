@@ -10,7 +10,7 @@
 {%block header%}
 {%endblock%}
 
-<div class="header">
+<div class="header" id='sidenav'>
     <span style="color: orange;font-size:30px;cursor:pointer" onclick="openNav()">&#9776;Audio FIles</span>
     <div class="header-right">
       <a href="{% url 'home' %}">Home</a>
@@ -37,4 +37,5 @@
         document.getElementById("mySidenav").style.width = "0";
     }
 </script>
+
   </body>
