@@ -1,9 +1,7 @@
-
 #text{
   overflow-y: auto;
-  height: 77vh; /* For 100% screen height */
+  height: 75vh;
 }
-
 #text-box{
     border-radius: 25px;
     background-color: white;
@@ -80,7 +78,7 @@
   }
 
   .sidenav .closebtn {
-    position: absolute;
+    position: absolute
     top: 0;
     right: 25px;
     font-size: 36px;
@@ -106,20 +104,6 @@
     padding: 20px 10px;
   }
 
-  input[type=file] {
-    background-color: orange;
-    border: 1px solid orange;
-    color: #282828;
-    cursor: pointer;
-    font-size: 20px;
-  }
-
-  input[type=file]:hover {
-    opacity: .5;
-    color: #282828;
-    cursor: pointer;
-    font-size: 20px;
-  }
 
   .header button {
     border-style: none;
@@ -185,6 +169,8 @@
     }
   }
 
+
+
   input[type=text] {
     background-color: #282828;
     border: none;
@@ -196,6 +182,7 @@
     cursor: pointer;
       padding-bottom: 8px;
   }
+
   input[type=button] {
       background-color: #282828;
       border: none;

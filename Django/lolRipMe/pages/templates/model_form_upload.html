@@ -1,10 +1,47 @@
 {% include 'base.html' %}
+
+<style>
+input[type=file] {
+  opacity: 0;
+}
+
+input[type=file]:hover {
+  opacity: 0;
+
+}
+
+.btn {
+  border-style: none;
+    background-color: Transparent;
+    float: left;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    text-decoration: none;
+    font-size: 25px;
+    line-height: 25px;
+    border-radius: 20px;
+}
+
+.btn:hover {
+  background-color: #ddd;
+  color: black;
+}
+</style>
+
+<br><br><br><br><br><br><br><br><br><br><br>
 <div class="col-md-4">
-  {% block content %}
-    <form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Upload</button>
-    </form>
-  {% endblock %}
-  </div>
+</div>
+<div class="col-md-4" style="text-align: center">
+        {% block content %}
+        <form method="post" enctype="multipart/form-data">
+          <label class="btn form-control input-lg">
+        {{ form.as_p }}
+        {% csrf_token %}
+        </label>
+        <br><br>
+        <br><br>
+      <button class="btn form-control input-lg" type="submit">Upload</button>
+      </form>
+        {% endblock %}
+      </div>

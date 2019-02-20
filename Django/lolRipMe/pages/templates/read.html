@@ -15,46 +15,41 @@ body {
   background-color: #606060;
   margin: 0px;
   font-family: "Lato", sans-serif;
+  font-size: 15;
+  font-weight: 750;
 }
-</style>
+input[type=file] {
+  opacity: 0;
+}
 
+input[type=file]:hover {
+  opacity: 0;
+
+}
+
+.btn {
+  border-style: none;
+    background-color: Transparent;
+    float: left;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    text-decoration: none;
+    font-size: 25px;
+    line-height: 25px;
+    border-radius: 20px;
+}
+
+.btn:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/*input[type=textarea] { width: 100vw; }*/
+</style>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
-
-  <script type="text/javascript">
-    $(document).ready(function() {
-      setInterval(myMethod, 8000);
-      function myMethod() {
-        //this will repeat every 5 seconds
-        //you can reset counter here
-        $.ajax({
-          url: "http://localhost:8000/text",
-          dataType: "text",
-          success: function(data) {
-            $(".text").html(data);
-          }
-        });
-        $.ajax({
-          url: "http://localhost:8000/sidenav",
-          dataType: "sidenav",
-          success: function(data) {
-            $(".sidenav").html(data);
-          }
-        });
-      }
-      $("#lesen").click(function() {
-        $.ajax({
-          url: "http://localhost:8000/func1/",
-          dataType: "text",
-          success: function(data) {
-            $("#nothing").html(data);
-          }
-        });
-      });
-    });
-    </script>
-
 
 <script>
     function openNav() {
@@ -64,30 +59,38 @@ body {
     function closeNav() {
         document.getElementById("mySidenav").style.width = "0";
     }
-    </script>
-
-
+</script>
 
 <body>
+
 <br>
 <div class="col-md-1">
 </div>
 
-<div id="text-box" class="col-md-10">
-  <div id="text" class="text">
-  <h3 style="color:#606060; Line-Height:2">
-  {% for phrase in file_content %}
-  {{phrase}}
-  {%endfor%}
-</h3>
+<div id="text" class="form-group col-md-10">
+<textarea class="form-control" id="text" rows="33">{% for phrase in file_content %}{{phrase}}{% endfor %}</textarea>
 </div>
-</div>
-
 <div class="col-md-1">
 </div>
 
 <div class="col-md-12" style="text-align: center">
   <br>
-  <audio src="" controls></audio>
+
+  <div class="col-md-4" style="text-align: center">
+      {% block content %}
+        <form method="post" enctype="multipart/form-data">
+          <label for="id_document" name="upload" class="btn form-control input-lg">lol</label>
+            {{ form.as_p }}
+            {% csrf_token %}
+        </div>
+          <div class="col-md-4" style="text-align: center">
+          <audio src="" controls></audio>
+        </div>
+          <div class="col-md-4">
+      <button class="btn form-control input-lg" type="submit">Upload</button>
+    </form>
+    {% endblock %}
+    </div>
+      </div>
 </div>
 </body>
