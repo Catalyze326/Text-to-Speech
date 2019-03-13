@@ -237,7 +237,7 @@ def normal_pdf(path_and_filename, filename_no_ext):
         # Turn into phrases small enough to send to api
         ph = make_phrases(s)
         # multithread and send to api
-        threadingCounter += make_threads(ph, threadingCounter, )
+        threadingCounter += make_threads(ph, threadingCounter, filename_no_ext,)
 
 
 def scanned_pdf(path_and_filename, filename_no_ext):
@@ -449,6 +449,5 @@ def main(path_and_filename):
     delete_old_files(filename_no_ext)
     print("The time taken was " + str(time.time() - time1) + "\nDone!")
 
-#2785 Millers Way Drive Ellicott City Maryland 21043
-#seancoralson@gmail.com
+
 main(sys.argv[1])

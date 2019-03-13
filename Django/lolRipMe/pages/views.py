@@ -1,6 +1,6 @@
-# from django.shortcuts import render
-# from .forms import DocumentForm
-# from django.shortcuts import redirect
+from django.shortcuts import render
+from .forms import DocumentForm
+from django.shortcuts import redirect
 
 import sys
 import pytesseract
