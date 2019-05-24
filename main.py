@@ -313,4 +313,9 @@ def main(path_and_filename):
     print("The time taken was " + str(time.time() - time1) + "\nDone!")
 
 
-main(sys.argv[1])
+try:
+    if 'help' in sys.argv[1]:
+        print('The proper usage for the program is \n python3 main.py /path/to/file')
+    main(sys.argv[1])
+except IndexError:
+    print('The proper usage for the program is \n python3 main.py /path/to/file')
