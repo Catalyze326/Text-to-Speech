@@ -1,4 +1,27 @@
 # Text-to-Speech
+To get this running simply run these commands:
+
+````
+pip3 install pytesseract
+````
+````
+pip3 install gtts
+````
+````
+pip3 install pydub
+````
+````
+pip3 install pypdf2
+````
+````
+pip3 install pdf2image
+````
+````
+pip3 install opencv-python
+````
+````
+sudo apt-get install ffmpeg
+````
 Multithreaded text to speech program that takes a large input file and exports an mp3.
 
 It can work with both pdfs and txt files. The beauty of this is that it can work with a pdf file that is made up of scanned in images of a book. It will turn them into an image and then turn that into text. There might be a better way to do this, but I cannot find it.
