@@ -1,4 +1,4 @@
-# Text To Speech
+# Text To Speech OCR
 
 This is a multithreaded text to speech program that takes a large input file and exports an mp3.
 
