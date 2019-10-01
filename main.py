@@ -1,8 +1,3 @@
-# from django.shortcuts import render
-# from .forms import DocumentForm
-# from django.shortcuts import redirect
-# TODO test all other filetypes 
-# TODO clean up code
 import sys
 import pytesseract
 import cv2
@@ -48,7 +43,7 @@ def delete_old_files(filename_no_ext):
     i = 0
     while os.path.isfile(unprocessed_audio + filename_no_ext + str(i) + ".mp3"):
         os.rename(unprocessed_audio + filename_no_ext + str(i) + ".mp3",
-         old_unprocessed_audio + filename_no_ext + str(i) + ".mp3")
+                  old_unprocessed_audio + filename_no_ext + str(i) + ".mp3")
         i += 1
     # Remove any leftover images
     i = 0
@@ -86,13 +81,13 @@ def image_to_text():
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         image_list = list_files(ocr_images)
         print(image_list)
-        for img_path,out_file in zip(image_list,executor.map(ocr,image_list)):
+        for img_path, out_file in zip(image_list, executor.map(ocr, image_list)):
             print("I did a thing")
 
 
 def ocr(img_path):
     img = cv2.imread(img_path)
-    text = pytesseract.image_to_string(img,lang='eng',config='--psm 6')
+    text = pytesseract.image_to_string(img, lang='eng', config='--psm 6')
     print(text)
     temp, filename = os.path.split(img_path)
     f = open(ocr_text + filename[:-4] + ".txt", 'w+')
@@ -121,8 +116,9 @@ def make_threads(phrase_list, threadingCounter, filename_no_ext):
     threadingCounterDefault = threadingCounter
     length = len(phrase_list)
     cores = multiprocessing.cpu_count()
-    print ("The ammount of threads we will be making is " + str(length))
-    pool = multiprocessing.Pool(cores * 40) #use all available cores, otherwise specify the number you want as an argument
+    print("The ammount of threads we will be making is " + str(length))
+    pool = multiprocessing.Pool(
+        cores * 40)  # use all available cores, otherwise specify the number you want as an argument
     for phrase in phrase_list:
         pool.apply_async(ask_google, args=(phrase, threadingCounter, filename_no_ext,))
         threadingCounter += 1
@@ -153,14 +149,14 @@ def decide_pdfs(path_and_filename, filename_no_ext):
     num_words_scanned = scanned_pdf_check(path_and_filename, filename_no_ext, page_to_check)
     num_words_text = len(str(pdfReader.getPage(page_to_check))) + 5
     while num_words_scanned < 20:
-        if(page_to_check + 1 < num_pages):
+        if (page_to_check + 1 < num_pages):
             page_to_check += 1
         else:
             print("This is a scanned in pdf")
             scanned_pdf(path_and_filename, filename_no_ext)
         num_words_scanned = scanned_pdf_check(path_and_filename, filename_no_ext, page_to_check)
         num_words_text = len(str(pdfReader.getPage(page_to_check).extractText())) + 5
-        
+
     if num_words_scanned > num_words_text + 10:
         print("This is a scanned in pdf")
         scanned_pdf(path_and_filename, filename_no_ext)
@@ -183,7 +179,7 @@ def normal_pdf(path_and_filename, filename_no_ext):
         # Turn into phrases small enough to send to api
         ph = make_phrases(s)
         # multithread and send to api
-        threadingCounter += make_threads(ph, threadingCounter, filename_no_ext,)
+        threadingCounter += make_threads(ph, threadingCounter, filename_no_ext, )
 
 
 def scanned_pdf(path_and_filename, filename_no_ext):
@@ -199,7 +195,7 @@ def scanned_pdf(path_and_filename, filename_no_ext):
     threadingCounter = 0
     while os.path.isfile(ocr_text + str(i) + ".txt"):
         f1 = open(ocr_text + str(i) + ".txt", 'r')
-        s += f1.read().replace('\n',' ').replace('\t',' ')
+        s += f1.read().replace('\n', ' ').replace('\t', ' ')
         i += 1
 
     print(s)
@@ -245,7 +241,7 @@ def txt(path_and_filename, filename_no_ext):
 
 def docx(path_and_filename, filename_no_ext):
     f = open(text_files + filename_no_ext + ".txt", 'w')
-#   Better for debuging when done put it in one function call
+    #   Better for debuging when done put it in one function call
     text = get_docx_text(path_and_filename)
     # Write to output.txt
     f.write(text)
